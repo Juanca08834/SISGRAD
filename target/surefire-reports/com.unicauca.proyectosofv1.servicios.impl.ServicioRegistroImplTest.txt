@@ -1,0 +1,8 @@
+-------------------------------------------------------------------------------
+Test set: com.unicauca.proyectosofv1.servicios.impl.ServicioRegistroImplTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.088 s <<< FAILURE! - in com.unicauca.proyectosofv1.servicios.impl.ServicioRegistroImplTest
+testRegistrar  Time elapsed: 0.06 s  <<< ERROR!
+java.lang.NullPointerException: Cannot invoke "com.unicauca.proyectosofv1.servicios.impl.ServicioRegistroImpl.registrar(String, String, String, String, String, String, String)" because "instance" is null
+	at com.unicauca.proyectosofv1.servicios.impl.ServicioRegistroImplTest.testRegistrar(ServicioRegistroImplTest.java:52)
+
