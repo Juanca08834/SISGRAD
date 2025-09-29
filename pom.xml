@@ -31,7 +31,6 @@
       <version>5.8.1</version>
       <scope>test</scope>
     </dependency>
-
            
     <!-- Logging con SLF4J -->
     <dependency>
