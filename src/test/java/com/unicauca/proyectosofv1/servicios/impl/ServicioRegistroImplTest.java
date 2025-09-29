@@ -1,172 +1,105 @@
 package com.unicauca.proyectosofv1.servicios.impl;
 
 import com.unicauca.proyectosofv1.excepciones.SISGRADException;
-import com.unicauca.proyectosofv1.modelo.Usuario;
 import com.unicauca.proyectosofv1.repositorio.RepositorioUsuario;
 import com.unicauca.proyectosofv1.seguridad.EncriptadorContrasenia;
-import com.unicauca.proyectosofv1.servicios.ServicioRegistro;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@DisplayName("Tests Simples para ServicioRegistroImpl")
 class ServicioRegistroImplTest {
 
-    private ServicioRegistro servicio;
-    private RepositorioUsuarioStub repositorio;
-    private EncriptadorContraseniaStub encriptador;
-
-    private static final String NOMBRES_VALIDOS = "Juan Carlos";
-    private static final String APELLIDOS_VALIDOS = "Pérez Gómez";
-    private static final String CELULAR_VALIDO = "3001234567";
-    private static final String PROGRAMA_VALIDO = "Ingeniería de Sistemas";
-    private static final String ROL_VALIDO = "Estudiante";
-    private static final String EMAIL_VALIDO = "juan.perez@unicauca.edu.co";
-    private static final String CONTRASENIA_VALIDA = "MiPass123!";
+    private RepositorioUsuario repo;
+    private EncriptadorContrasenia encriptador;
+    private ServicioRegistroImpl servicio;
 
     @BeforeEach
     void setUp() {
-        repositorio = new RepositorioUsuarioStub();
-        encriptador = new EncriptadorContraseniaStub();
-        servicio = new ServicioRegistroImpl(repositorio, encriptador);
+        repo = Mockito.mock(RepositorioUsuario.class);
+        encriptador = Mockito.mock(EncriptadorContrasenia.class);
+        // evitar NPE en la llamada a generarHash(...)
+        when(encriptador.generarHash(any(char[].class))).thenReturn("HASHED");
+        servicio = new ServicioRegistroImpl(repo, encriptador);
     }
 
     @Test
-    @DisplayName("Debe registrar usuario exitosamente con datos válidos")
-    void debeRegistrarUsuarioExitosamente() throws SISGRADException {
-        assertDoesNotThrow(() -> {
-            servicio.registrar(NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CELULAR_VALIDO,
-                    PROGRAMA_VALIDO, ROL_VALIDO, EMAIL_VALIDO, CONTRASENIA_VALIDA);
-        });
-
-        assertTrue(repositorio.fueGuardadoUsuario());
-        assertTrue(encriptador.fueGeneradoHash());
+    void registrar_nombresVacio_lanzaSISGRAD() {
+        SISGRADException ex = assertThrows(SISGRADException.class, () ->
+                servicio.registrar("", "Perez", "3001234567", "Ingeniería de Sistemas",
+                        "Estudiante", "user@unicauca.edu.co", "Aa1!aa")
+        );
+        assertEquals("Ingresa tus nombres.", ex.getMessage());
     }
 
     @Test
-    @DisplayName("Debe fallar cuando nombres es null")
-    void debeFallarCuandoNombresEsNull() {
-        SISGRADException excepcion = assertThrows(SISGRADException.class, () -> {
-            servicio.registrar(null, APELLIDOS_VALIDOS, CELULAR_VALIDO,
-                    PROGRAMA_VALIDO, ROL_VALIDO, EMAIL_VALIDO, CONTRASENIA_VALIDA);
-        });
-
-        assertEquals("Ingresa tus nombres.", excepcion.getMessage());
+    void registrar_apellidosVacio_lanzaSISGRAD() {
+        SISGRADException ex = assertThrows(SISGRADException.class, () ->
+                servicio.registrar("Juan", "", "3001234567", "Ingeniería de Sistemas",
+                        "Estudiante", "user@unicauca.edu.co", "Aa1!aa")
+        );
+        assertEquals("Ingresa tus apellidos.", ex.getMessage());
     }
 
     @Test
-    @DisplayName("Debe fallar cuando apellidos es vacío")
-    void debeFallarCuandoApellidosEsVacio() {
-        SISGRADException excepcion = assertThrows(SISGRADException.class, () -> {
-            servicio.registrar(NOMBRES_VALIDOS, "", CELULAR_VALIDO,
-                    PROGRAMA_VALIDO, ROL_VALIDO, EMAIL_VALIDO, CONTRASENIA_VALIDA);
-        });
-
-        assertEquals("Ingresa tus apellidos.", excepcion.getMessage());
+    void registrar_celularFormatoInvalido_lanzaSISGRAD() {
+        SISGRADException ex = assertThrows(SISGRADException.class, () ->
+                servicio.registrar("Juan", "Perez", "ABC123", "Ingeniería de Sistemas",
+                        "Estudiante", "user@unicauca.edu.co", "Aa1!aa")
+        );
+        assertEquals("El celular debe tener solo dígitos (7 a 15).", ex.getMessage());
     }
 
     @Test
-    @DisplayName("Debe fallar con email no institucional")
-    void debeFallarConEmailNoInstitucional() {
-        SISGRADException excepcion = assertThrows(SISGRADException.class, () -> {
-            servicio.registrar(NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CELULAR_VALIDO,
-                    PROGRAMA_VALIDO, ROL_VALIDO, "juan@gmail.com", CONTRASENIA_VALIDA);
-        });
-
-        assertEquals("Usa tu correo institucional @unicauca.edu.co", excepcion.getMessage());
+    void registrar_emailNoInstitucional_lanzaSISGRAD() {
+        SISGRADException ex = assertThrows(SISGRADException.class, () ->
+                servicio.registrar("Juan", "Perez", "3001234567", "Ingeniería de Sistemas",
+                        "Estudiante", "juan@gmail.com", "Aa1!aa")
+        );
+        assertEquals("Usa tu correo institucional @unicauca.edu.co", ex.getMessage());
     }
 
     @Test
-    @DisplayName("Debe fallar con contraseña muy corta")
-    void debeFallarConContraseniaMuyCorta() {
-        SISGRADException excepcion = assertThrows(SISGRADException.class, () -> {
-            servicio.registrar(NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CELULAR_VALIDO,
-                    PROGRAMA_VALIDO, ROL_VALIDO, EMAIL_VALIDO, "12345");
-        });
-
-        assertEquals("La contraseña debe tener al menos 6 caracteres.", excepcion.getMessage());
+    void registrar_programaInvalido_lanzaSISGRAD() {
+        SISGRADException ex = assertThrows(SISGRADException.class, () ->
+                servicio.registrar("Juan", "Perez", "3001234567", "Programa Inexistente",
+                        "Estudiante", "user@unicauca.edu.co", "Aa1!aa")
+        );
+        assertEquals("Selecciona un programa válido.", ex.getMessage());
     }
 
     @Test
-    @DisplayName("Debe fallar cuando ya existe usuario con mismo email")
-    void debeFallarCuandoYaExisteUsuario() {
-        repositorio.simularUsuarioExistente(EMAIL_VALIDO);
-
-        SISGRADException excepcion = assertThrows(SISGRADException.class, () -> {
-            servicio.registrar(NOMBRES_VALIDOS, APELLIDOS_VALIDOS, CELULAR_VALIDO,
-                    PROGRAMA_VALIDO, ROL_VALIDO, EMAIL_VALIDO, CONTRASENIA_VALIDA);
-        });
-
-        assertEquals("Ya existe un usuario con ese email.", excepcion.getMessage());
+    void registrar_rolInvalido_lanzaSISGRAD() {
+        SISGRADException ex = assertThrows(SISGRADException.class, () ->
+                servicio.registrar("Juan", "Perez", "3001234567", "Ingeniería de Sistemas",
+                        "NoRol", "user@unicauca.edu.co", "Aa1!aa")
+        );
+        assertEquals("Seleccione un rol válido (Docente, Estudiante o Coordinador).", ex.getMessage());
     }
 
     @Test
-    @DisplayName("Debe manejar celular null correctamente")
-    void debeManejarCelularNullCorrectamente() throws SISGRADException {
-        assertDoesNotThrow(() -> {
-            servicio.registrar(NOMBRES_VALIDOS, APELLIDOS_VALIDOS, null,
-                    PROGRAMA_VALIDO, ROL_VALIDO, EMAIL_VALIDO, CONTRASENIA_VALIDA);
-        });
-
-        assertTrue(repositorio.fueGuardadoUsuario());
-        assertEquals("", repositorio.getUltimoUsuario().getCelular());
+    void registrar_usuarioExistente_convierteRuntimeEnSISGRAD() {
+        // Simular violación unique/constraint desde el repositorio
+        doThrow(new RuntimeException("UNIQUE constraint failed: usuario.email")).when(repo).guardar(any());
+        SISGRADException ex = assertThrows(SISGRADException.class, () ->
+                servicio.registrar("Juan", "Perez", "3001234567", "Ingeniería de Sistemas",
+                        "Estudiante", "user@unicauca.edu.co", "Aa1!aa")
+        );
+        assertEquals("Ya existe un usuario con ese email.", ex.getMessage());
     }
 
-    private static class RepositorioUsuarioStub implements RepositorioUsuario {
-        private boolean guardadoUsuario = false;
-        private boolean actualizadoUsuario = false;
-        private Usuario usuarioExistente = null;
-        private Usuario ultimoUsuario = null;
+    @Test
+    void registrar_exito_invocaGuardarYEncripta() {
+        // Contraseña que cumple la política (mín. 6, mayúscula, minúscula, dígito, caracter especial)
+        String pwd = "Aa1!Aa1!";
+        assertDoesNotThrow(() ->
+                servicio.registrar("Juan", "Perez", "3001234567", "Ingeniería de Sistemas",
+                        "Estudiante", "user@unicauca.edu.co", pwd)
+        );
 
-        @Override
-        public Usuario buscarPorEmail(String email) {
-            return usuarioExistente;
-        }
-
-        @Override
-        public void guardar(Usuario usuario) {
-            this.guardadoUsuario = true;
-            this.ultimoUsuario = usuario;
-        }
-
-        @Override
-        public void actualizar(Usuario usuario) {
-            this.actualizadoUsuario = true;
-            this.ultimoUsuario = usuario;
-        }
-
-        public boolean fueGuardadoUsuario() {
-            return guardadoUsuario;
-        }
-
-        public boolean fueActualizadoUsuario() {
-            return actualizadoUsuario;
-        }
-
-        public void simularUsuarioExistente(String email) {
-            usuarioExistente = new Usuario(email, "Test", "Test", "",
-                    "Ingeniería de Sistemas", "Estudiante", "hash",
-                    java.time.LocalDateTime.now());
-        }
-
-        public Usuario getUltimoUsuario() {
-            return ultimoUsuario;
-        }
-    }
-
-    private static class EncriptadorContraseniaStub extends EncriptadorContrasenia {
-        private boolean generadoHash = false;
-
-        @Override
-        public String generarHash(char[] contrasenia) {
-            this.generadoHash = true;
-            return "hashedPassword123";
-        }
-
-        public boolean fueGeneradoHash() {
-            return generadoHash;
-        }
+        verify(encriptador, times(1)).generarHash(any(char[].class));
+        verify(repo, times(1)).guardar(any());
     }
 }
