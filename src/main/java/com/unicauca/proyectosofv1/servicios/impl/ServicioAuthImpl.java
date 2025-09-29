@@ -14,6 +14,8 @@ public class ServicioAuthImpl implements ServicioAuth {
         this.encriptador = encriptador;
     }
 
+    
+
     @Override
     public boolean login(String email, String contraseniaPlano) {
         Usuario u = repo.buscarPorEmail(email);
@@ -27,4 +29,6 @@ public class ServicioAuthImpl implements ServicioAuth {
         if (u == null) return null;
         return encriptador.verificar(contraseniaPlano.toCharArray(), u.getPasswordHash()) ? u : null;
     }
+    
+    
 }

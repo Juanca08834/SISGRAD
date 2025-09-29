@@ -1,6 +1,7 @@
 package com.unicauca.proyectosofv1.ui;
 
+@FunctionalInterface
 public interface AccionesRecuperacion {
     void alEnviarSolicitud(DatosRecuperacion datos);
-    void alCancelar();
+    default void alCancelar() { /* no-op */ }
 }
