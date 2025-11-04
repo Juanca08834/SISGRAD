@@ -1,0 +1,19 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+LAYOUT_WITH_LEGEND()
+
+Person(teacher, "Docente")
+Person(student, "Estudiante")
+Person(coordinator, "Coordinador de Programa")
+Person(deptHead, "Jefatura de Departamento")
+
+System_Boundary(s, "SGTG FIET") {
+  System(sgtg, "Sistema Gestión de Trabajos de Grado", "Portal y microservicios")
+}
+
+Rel(teacher, sgtg, "Se registra, envía Formato A y anteproyecto")
+Rel(coordinator, sgtg, "Evalúa Formato A")
+Rel(deptHead, sgtg, "Lista y coordina anteproyectos")
+Rel(student, sgtg, "Consulta estado del proyecto")
+
+@enduml

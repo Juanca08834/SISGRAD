@@ -1,0 +1,43 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_WITH_LEGEND()
+
+Person(teacher, "Docente")
+Person(coordinator, "Coordinador")
+Person(deptHead, "Jefatura")
+Person(student, "Estudiante")
+
+System_Boundary(s, "SGTG FIET") {
+  Container_Boundary(web, "Front-End / Gateway") {
+    Container(gw, "API Gateway", "Spring Cloud Gateway", "Ruteo y políticas")
+  }
+
+  Container(discovery, "Discovery (Eureka)", "Eureka", "Registro de servicios")
+
+  Container(identity, "Identity Service", "Spring Boot (Web, JPA, Security, H2)", "Registro/Login docentes")
+  Container(project, "Project Service", "Spring Boot (Web, JPA, H2)", "Formato A + Estado")
+  Container(evaluation, "Evaluation Service", "Spring Boot (Web, JPA, H2)", "Evaluación Formato A")
+  Container(document, "Document Service", "Spring Boot (Web, JPA, H2)", "Anteproyecto")
+  Container(notification, "Notification Service", "Spring Boot", "Emails (simulado / logs)")
+
+  ContainerQueue(bus, "Event Bus", "Kafka", "Eventos de dominio (opcional en dev)")
+}
+
+Rel(teacher, gw, "HTTP/JSON")
+Rel(gw, identity, "HTTP")
+Rel(gw, project, "HTTP")
+Rel(gw, evaluation, "HTTP")
+Rel(gw, document, "HTTP")
+Rel(gw, notification, "HTTP")
+Rel(identity, discovery, "Registra")
+Rel(project, discovery, "Registra")
+Rel(evaluation, discovery, "Registra")
+Rel(document, discovery, "Registra")
+Rel(notification, discovery, "Registra")
+
+Rel(project, bus, "Publica FormatoASubmitted")
+Rel(evaluation, bus, "Publica FormatoAEvaluated")
+Rel(document, bus, "Publica AnteproyectoSubmitted")
+Rel(notification, bus, "Consume todos (en prod)")
+
+@enduml
