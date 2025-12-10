@@ -1,0 +1,86 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  
+  # Configuración de Base de Datos
+  # Por defecto usa H2 (en memoria) para desarrollo sin Docker
+  # Cambia a PostgreSQL cuando tengas Docker corriendo
+  datasource:
+    # Para H2 (desarrollo local sin Docker)
+    url: jdbc:h2:mem:auth_db
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+    
+    # Para PostgreSQL (descomentar cuando uses Docker)
+    # url: jdbc:postgresql://localhost:5432/auth_db
+    # username: admin
+    # password: admin123
+    # driver-class-name: org.postgresql.Driver
+  
+  # Configuración JPA
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        # Para H2
+        dialect: org.hibernate.dialect.H2Dialect
+        
+        # Para PostgreSQL (descomentar cuando uses Docker)
+        # dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  # Consola H2 (solo para desarrollo)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  # RabbitMQ (opcional por ahora, descomentar cuando lo uses)
+  # rabbitmq:
+  #   host: localhost
+  #   port: 5672
+  #   username: admin
+  #   password: admin123
+
+# Configuración JWT
+jwt:
+  secret: 3f7a8b2c9e1d4f6a8b3c5d7e9f1a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2e4f6a
+  expiration: 86400000 # 24 horas en milisegundos
+  refresh-expiration: 604800000 # 7 días
+
+# Swagger/OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+
+# Actuator (para health checks)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.unicauca.auth: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# NOTA: Esta configuración usa H2 por defecto para que puedas probar
+# sin necesidad de instalar PostgreSQL o Docker inicialmente.
+# Cuando quieras usar PostgreSQL, solo descomenta las líneas correspondientes.
