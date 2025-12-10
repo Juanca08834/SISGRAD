@@ -1,11 +1,40 @@
 server:
-  port: 8085
+  port: 8084
 
 spring:
   application:
     name: notification-service
+  
+  # RabbitMQ
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
+    listener:
+      simple:
+        acknowledge-mode: auto
+        prefetch: 1
+        retry:
+          enabled: true
+          initial-interval: 3000
+          max-attempts: 3
 
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+# Colas de RabbitMQ
+rabbitmq:
+  queue:
+    formato-a: formato-a-notifications
+    anteproyecto: anteproyecto-notifications
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# Logging
+logging:
+  level:
+    com.unicauca.notification: INFO
+    org.springframework.amqp: DEBUG
