@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Padre de Spring Boot -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+        <relativePath/> <!-- se descarga de Maven Central -->
+    </parent>
+
+    <!-- ESTE es tu proyecto raíz -->
+    <groupId>com.unicauca</groupId>
+    <artifactId>trabajo-grado-microservices</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>  <!-- importante: es un aggregator, no un jar -->
+
+    <modules>
+        <module>auth-service</module>
+        <module>formato-a-service</module>
+        <module>anteproyecto-service</module>
+        <module>notification-service</module>
+        <module>desktop-client</module>
+        <!-- aquí irán otros microservicios -->
+    </modules>
+
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
+</project>

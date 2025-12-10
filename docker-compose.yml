@@ -1,0 +1,151 @@
+version: '3.8'
+
+services:
+  # PostgreSQL para Auth Service
+  postgres-auth:
+    image: postgres:15-alpine
+    container_name: postgres-auth
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      JWT_SECRET: prueba1234567890abcdef1234567890
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
+  # PostgreSQL para Formato A Service
+  postgres-formato:
+    image: postgres:15-alpine
+    container_name: postgres-formato
+    environment:
+      POSTGRES_DB: formato_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      JWT_SECRET: prueba1234567890abcdef1234567890
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-formato-data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+
+  # RabbitMQ para mensajería asíncrona
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # Puerto AMQP
+      - "15672:15672" # Puerto Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+      JWT_SECRET: prueba1234567890abcdef1234567890
+    networks:
+      - microservices-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      JWT_SECRET: prueba1234567890abcdef1234567890
+    depends_on:
+      - postgres-auth
+      - rabbitmq
+    networks:
+      - microservices-network
+
+  # Formato A Service
+  formato-a-service:
+    build:
+      context: ./formato-a-service
+      dockerfile: Dockerfile
+    container_name: formato-a-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-formato:5432/formato_db
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin123
+      SPRING_RABBITMQ_HOST: rabbitmq
+      AUTH_SERVICE_URL: http://auth-service:8081
+      JWT_SECRET: prueba1234567890abcdef1234567890
+    depends_on:
+      - postgres-formato
+      - rabbitmq
+      - auth-service
+    networks:
+      - microservices-network
+
+  # Anteproyecto Service (con H2)
+  anteproyecto-service:
+    build:
+      context: ./anteproyecto-service
+      dockerfile: Dockerfile
+    container_name: anteproyecto-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      AUTH_SERVICE_URL: http://auth-service:8081
+      JWT_SECRET: prueba1234567890abcdef1234567890
+    depends_on:
+      - rabbitmq
+      - auth-service
+    networks:
+      - microservices-network
+
+  # Notification Service (con H2)
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_RABBITMQ_HOST: rabbitmq
+      JWT_SECRET: prueba1234567890abcdef1234567890
+    depends_on:
+      - rabbitmq
+    networks:
+      - microservices-network
+
+  # API Gateway (Opcional)
+#  api-gateway:
+#    build:
+#      context: ./api-gateway
+#      dockerfile: Dockerfile
+#    container_name: api-gateway
+#    ports:
+#      - "8080:8080"
+#    environment:
+#      AUTH_SERVICE_URL: http://auth-service:8081
+#      FORMATO_SERVICE_URL: http://formato-a-service:8082
+#      ANTEPROYECTO_SERVICE_URL: http://anteproyecto-service:8083
+#    depends_on:
+#      - auth-service
+#      - formato-a-service
+#      - anteproyecto-service
+#    networks:
+#      - microservices-network
+
+volumes:
+  postgres-auth-data:
+  postgres-formato-data:
+
+networks:
+  microservices-network:
+    driver: bridge
